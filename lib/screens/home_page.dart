@@ -4,8 +4,7 @@ import '../widgets/frase_widget.dart';
 import '../models/frase.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/comentario_widget.dart';
-
-
+import '../widgets/comentarios_list_widget.dart'; 
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,9 +26,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   ];
 
   late Frase _fraseActual;
-
   late AnimationController _controller;
   late Animation<double> _animation;
+
+ 
+  final GlobalKey<ComentariosListWidgetState> comentariosListKey = GlobalKey();
 
   @override
   void initState() {
@@ -72,37 +73,40 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         title: const Text('Frases Motivadoras SENA V.1 BETA'),
         centerTitle: true,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FraseWidget(frase: _fraseActual.contenido),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _generarFrase,
-                child: const Text('Nueva frase'),
-              ),
-              const SizedBox(height: 20), // para separar visualmente
-  ComentarioWidget(), // Aquí agregas el widget para los comentarios
-              const SizedBox(height: 20),
-              AnimatedBuilder(
-                animation: _animation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _animation.value,
-                    child: IconButton(
-                      icon: const Icon(Icons.favorite, color: Colors.red),
-                      iconSize: 30,
-                      tooltip: 'Compartir en WhatsApp',
-                      onPressed: _compartirFrase,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            FraseWidget(frase: _fraseActual.contenido),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: _generarFrase,
+              child: const Text('Nueva frase'),
+            ),
+            const SizedBox(height: 20),
+            ComentarioWidget(
+              onComentarioEnviado: () {
+                comentariosListKey.currentState?.cargarComentarios();
+              },
+            ),
+            const SizedBox(height: 20),
+            ComentariosListWidget(key: comentariosListKey),
+            const SizedBox(height: 20),
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _animation.value,
+                  child: IconButton(
+                    icon: const Icon(Icons.favorite, color: Colors.red),
+                    iconSize: 30,
+                    tooltip: 'Compartir en WhatsApp',
+                    onPressed: _compartirFrase,
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

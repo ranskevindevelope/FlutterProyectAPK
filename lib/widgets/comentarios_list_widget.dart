@@ -1,61 +1,80 @@
 import 'package:flutter/material.dart';
-import '../api/comentarios_api.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ComentariosListWidget extends StatefulWidget {
+  const ComentariosListWidget({super.key});
+
   @override
-  _ComentariosListWidgetState createState() => _ComentariosListWidgetState();
+  ComentariosListWidgetState createState() => ComentariosListWidgetState();
 }
 
-class _ComentariosListWidgetState extends State<ComentariosListWidget> {
-  late Future<List<dynamic>> futureComentarios;
+class ComentariosListWidgetState extends State<ComentariosListWidget> {
+  List<Map<String, dynamic>> _comentarios = [];
+  bool _cargando = false;
 
   @override
   void initState() {
     super.initState();
-    futureComentarios = fetchComentarios();
+    cargarComentarios();
+  }
+
+  Future<void> cargarComentarios() async {
+    setState(() => _cargando = true);
+
+    final url = Uri.parse("http://192.168.1.2/PHP-API-MYSQL_V2/controller/obtener_comentarios.php");
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          setState(() {
+            _comentarios = List<Map<String, dynamic>>.from(data['comentarios']);
+          });
+        } else {
+          setState(() {
+            _comentarios = [];
+          });
+        }
+      } else {
+        setState(() {
+          _comentarios = [];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _comentarios = [];
+      });
+    }
+
+    setState(() => _cargando = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<dynamic>>(
-      future: futureComentarios,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("No hay comentarios"));
-        } else {
-          final comentarios = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "🗨️ Comentarios recientes:",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  itemCount: comentarios.length,
-                  itemBuilder: (context, index) {
-                    final comentario = comentarios[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(comentario['contenido']),
-                        subtitle: Text(comentario['fech'] ?? ''),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
+    if (_cargando) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_comentarios.isEmpty) {
+      return const Text("No hay comentarios aún.");
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _comentarios.length,
+      itemBuilder: (context, index) {
+        final comentario = _comentarios[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          child: ListTile(
+            title: Text(comentario['contenido']),
+            subtitle: Text("📅 ${comentario['fecha']}"),
+          ),
+        );
       },
     );
   }
 }
-
