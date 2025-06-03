@@ -3,6 +3,9 @@ import 'dart:math';
 import '../widgets/frase_widget.dart';
 import '../models/frase.dart';
 import 'package:share_plus/share_plus.dart';
+import '../widgets/comentario_widget.dart';
+
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -81,6 +84,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 onPressed: _generarFrase,
                 child: const Text('Nueva frase'),
               ),
+              const SizedBox(height: 20), // para separar visualmente
+  ComentarioWidget(), // Aquí agregas el widget para los comentarios
               const SizedBox(height: 20),
               AnimatedBuilder(
                 animation: _animation,
